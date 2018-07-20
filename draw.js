@@ -11,6 +11,7 @@ function drawRobot(pose) {
     ctx.rotate(pose.heading);
 
     ctx.strokeStyle = "black";
+    ctx.lineWidth = 1;
 
     // draw the circle
     ctx.beginPath();
@@ -31,6 +32,7 @@ function drawRobot(pose) {
 
 function drawPath(pts) {
     ctx.strokeStyle = "red";
+    //ctx.lineWidth = robotRadius * scale;
     ctx.beginPath();
     ctx.moveTo(pts[0].x * scale + xOffset, pts[0].y * scale + yOffset);
     for (var i = 1; i < pts.length; i++) {
@@ -41,6 +43,7 @@ function drawPath(pts) {
 
 function drawRoom(room) {
     ctx.strokeStyle = "black";
+    ctx.lineWidth = 1;
     ctx.translate(xOffset, yOffset);
     ctx.strokeRect(room.x * scale, room.y * scale, room.width * scale, room.height * scale);
 
@@ -50,11 +53,9 @@ function drawRoom(room) {
 
 function ready() {
     ctx = document.getElementById("canvas").getContext("2d");
-    ctx.canvas.width = window.innerWidth;
-    ctx.canvas.height = window.innerHeight;
+    ctx.canvas.width = document.getElementById("canvas").clientWidth;
+    ctx.canvas.height = document.getElementById("canvas").clientHeight;
 
-    xOffset = window.innerWidth / 2;
-    yOffset = window.innerHeight / 2;
-
-    ctx.lineWidth = 1;
+    xOffset = ctx.canvas.width / 2;
+    yOffset = ctx.canvas.height / 2;
 }
