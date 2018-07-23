@@ -23,7 +23,7 @@ function setRoom() {
 
     var policy = document.getElementById("policy-select").value;
 
-    robot1 = new Robot(room1, width / 2, height / 2, Math.PI / 3, policy);
+    robot1 = new Robot(room1, width / 2, height / 2, Math.PI / 2, policy);
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     drawRoom(room1);
@@ -46,20 +46,35 @@ function run() {
     var hours = document.getElementById("time").value;
     var time = parseFloat(hours) * 3600; // seconds
 
-    for (var t = 0; t < time / TIMESTEP; t++) {
-        robot1.update();
-    }
+    //for (var t = 0; t < time / TIMESTEP; t++) {
+    //    robot1.update();
+    //}
 
     drawPath(robot1.path);
 
     // robot animation:
-    //setInterval(function() {
-    //    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    var c = 0;
+    setInterval(function() {
+        if (c * TIMESTEP < time) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    //    drawPath(robot1.path);
-    //    drawRobot(robot1);
-    //    drawRoom(room1);
+            drawPath(robot1.path);
+            drawRobot(robot1);
+            drawRoom(room1);
 
-    //    robot1.update();
-    //}, TIMESTEP * 1000);
+            robot1.update();
+        }
+
+        c++;
+    }, 1);
+}
+
+function ud() {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    drawPath(robot1.path);
+    drawRobot(robot1);
+    drawRoom(room1);
+
+    robot1.update();
 }
