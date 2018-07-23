@@ -17,8 +17,9 @@ function Robot(room, startX, startY, startHeading) {
         var lower = this.heading + 3 * Math.PI / 4;
         var upper = this.heading + 5 * Math.PI / 4;
 
-        //this.targetHeading = Math.random() * (upper - lower) + lower;
-        this.heading = Math.random() * (upper - lower) + lower;
+        //this.heading = Math.random() * (upper - lower) + lower;
+        this.heading = this.supplementaryHeading() + (Math.random() * 2 - 1) * 0.1;
+        //this.heading = this.supplementaryHeading() + 0.005;
     }
 
     this.update = function () {
@@ -38,6 +39,23 @@ function Robot(room, startX, startY, startHeading) {
                 this.newDirection();
             }
         }
+    }
+
+    this.supplementaryHeading = function () {
+        var leftDist = this.x - this.room.x;
+        var rightDist = this.room.x + this.room.width - this.x;
+        var topDist = this.y - this.room.y;
+        var bottomDist = this.room.y + this.room.height - this.y;
+
+        var newHeading = Math.PI - this.heading;
+
+        // if it's a horizontal wall
+        if (topDist < leftDist && topDist < rightDist
+            || bottomDist < leftDist && bottomDist < rightDist) {
+            newHeading += Math.PI;
+        }
+
+        return newHeading;
     }
 
     this.hitWall = function () {
