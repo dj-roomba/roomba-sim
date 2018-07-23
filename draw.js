@@ -1,7 +1,7 @@
 var ctx;
 var xOffset = 0;
 var yOffset = 0;
-var robotRadius = 0.5;
+var robotRadius = 6.5 / 12;
 
 function drawRobot(pose) {
     var centerX = pose.x;
