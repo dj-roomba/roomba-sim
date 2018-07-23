@@ -21,7 +21,9 @@ function setRoom() {
 
     room1 = new Room(-width / 2 - 2, -height / 2, width, height);
 
-    robot1 = new Robot(room1, width / 2, height / 2, Math.PI / 3);
+    var policy = document.getElementById("policy-select").value;
+
+    robot1 = new Robot(room1, width / 2, height / 2, Math.PI / 3, policy);
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     drawRoom(room1);

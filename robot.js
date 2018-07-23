@@ -1,13 +1,17 @@
 var TURN_SPEED = 10;
 var FORWARD_SPEED = 2 / 12;
 
-function Robot(room, startX, startY, startHeading) {
+function Robot(room, startX, startY, startHeading, policy) {
     this.room = room;
     this.x = startX + room.x;
     this.y = startY + room.y;
     this.heading = startHeading;
     this.targetHeading = startHeading;
     this.turning = false;
+    this.policy = policy;
+
+    this.startX = this.x;
+    this.startY = this.y;
 
     this.path = [{x: this.x, y: this.y}];
 
@@ -26,18 +30,53 @@ function Robot(room, startX, startY, startHeading) {
         //record this as a point in the path
         this.path.push({x: this.x, y: this.y});
 
-        if (this.turning) {
-            var direction = Math.sign(this.targetHeading - this.heading);
-            this.turn(TURN_SPEED * direction);
+        if (this.policy == "random") {
 
-            if (this.targetHeading - this.heading < TURN_SPEED * TIMESTEP) {
-                this.turning = false;
-            }
-        } else {
+            // RANDOM DRIVING POLICY
             this.drive(FORWARD_SPEED);
             if (this.hitWall()) {
-                this.newDirection();
+                var lower = this.heading + 3 * Math.PI / 4;
+                var upper = this.heading + 5 * Math.PI / 4;
+                this.heading = Math.random() * (upper - lower) + lower;
             }
+
+        } else if (this.policy == "supp") {
+
+            // SUPPLEMENTARY DRIVING POLICY
+            this.drive(FORWARD_SPEED);
+            if (this.hitWall()) {
+                this.heading = this.supplementaryHeading();
+            }
+
+        } else if (this.policy == "supp-static-fuzz") {
+
+            // SUPPLEMENTARY + STATIC FUZZ DRIVING POLICY
+            this.drive(FORWARD_SPEED);
+            if (this.hitWall()) {
+                this.heading = this.supplementaryHeading() + 0.005;
+            }
+
+        } else if (this.policy == "supp-rand-fuzz") {
+
+            // SUPPLEMENTARY + RANDOM FUZZ DRIVING POLICY
+            this.drive(FORWARD_SPEED);
+            if (this.hitWall()) {
+                this.heading = this.supplementaryHeading() + (Math.random() * 2 - 1) * 0.1;
+            }
+
+        } else if (this.policy == "spiral") {
+
+            // SPIRAL DRIVING POLICY
+            var distFromStart = Math.sqrt(Math.pow(this.x - this.startX, 2) +
+                Math.pow(this.y - this.startY, 2));
+            this.heading = 10 * distFromStart;
+
+            this.drive(FORWARD_SPEED);
+
+            if (this.hitWall()) {
+                this.policy = "";
+            }
+
         }
     }
 
