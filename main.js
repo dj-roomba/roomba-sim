@@ -46,14 +46,14 @@ function run() {
     var hours = document.getElementById("time").value;
     var time = parseFloat(hours) * 3600; // seconds
 
-    //for (var t = 0; t < time / TIMESTEP; t++) {
-    //    robot1.update();
-    //}
+    for (var t = 0; t < time / TIMESTEP; t++) {
+        robot1.update();
+    }
 
     drawPath(robot1.path);
 
     // robot animation:
-    var c = 0;
+    /*var c = 0;
     setInterval(function() {
         if (c * TIMESTEP < time) {
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -66,7 +66,7 @@ function run() {
         }
 
         c++;
-    }, 1);
+    }, 1);*/
 }
 
 function ud() {
