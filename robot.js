@@ -1,7 +1,6 @@
 var TURN_SPEED = 10;
 var FORWARD_SPEED = 2 / 12;
-var PATH_DISTANCE_THRESHOLD = 0.1;
-var POINTS_AT_A_TIME = 1000;
+var PATH_DISTANCE_THRESHOLD = 0.5;
 
 function Robot(room, startX, startY, startHeading, policy) {
     this.room = room;
@@ -19,13 +18,14 @@ function Robot(room, startX, startY, startHeading, policy) {
 
     // generate an array of points, 0.1ft apart
     this.allPts = [];
-    for (var x = room.x + 0.5; x < room.x + room.width - 0.5; x += 0.5) {
-        for (var y = room.y + 0.5; y < room.y + room.height - 0.5; y += 0.5) {
+    for (var x = room.x + 0.5; x < room.x + room.width - 0.5; x += 0.2) {
+        for (var y = room.y + 0.5; y < room.y + room.height - 0.5; y += 0.2) {
             this.allPts.push({x: x, y: y});
         }
     }
 
     this.nearPts = [];
+    this.searchFocus = { x: this.x, y: this.y };
 
     this.newDirection = function () {
         //this.turning = true;
@@ -93,34 +93,22 @@ function Robot(room, startX, startY, startHeading, policy) {
 
             // PURSUE EMPTY AREA POLICY
 
-            if (this.nearPts.length <= POINTS_AT_A_TIME) {
-                // sort allPts by distance to the robot
-                var robotX = this.x;
-                var robotY = this.y;
-                var robotHeading = this.heading;
-                this.allPts.sort(function (a, b) {
-                    var distA = Math.sqrt(Math.pow(a.x - robotX, 2) +
-                        Math.pow(a.y - robotY, 2));
-                    var distB = Math.sqrt(Math.pow(b.x - robotX, 2) +
-                        Math.pow(b.y - robotY, 2));
-                    var distScore = distA - distB;
-
-                    var newHeadingA = Math.atan2(a.y - robotY, a.x - robotX);
-                    var newHeadingB = Math.atan2(b.y - robotY, b.x - robotX);
-                    var headingDiffA = Math.abs(newHeadingA - robotHeading);
-                    var headingDiffB = Math.abs(newHeadingB - robotHeading);
-                    var headingScore = headingDiffA - headingDiffB;
-
-                    return distScore + 100 * headingScore;
-                });
-                this.nearPts = this.nearPts.concat(this.allPts.splice(0, POINTS_AT_A_TIME));
-            }
-
-            // sort allPts by distance to the robot
+            // sort allPts by rough (taxicab) distance to the robot
             var robotX = this.x;
             var robotY = this.y;
             var robotHeading = this.heading;
-            this.nearPts.sort(function (a, b) {
+            this.allPts.sort(function (a, b) {
+                var distA = Math.abs(a.x - robotX) + Math.abs(a.y - robotY);
+                var distB = Math.abs(b.x - robotX) + Math.abs(b.y - robotY);
+                var distScore = distA - distB;
+
+                return distScore;
+            });
+
+            // sort the points near us more accurately, but more slowly,
+            // and consider how close the point is to our current heading
+            var nearPts = this.allPts.splice(0, 100);
+            nearPts.sort(function (a, b) {
                 var distA = Math.sqrt(Math.pow(a.x - robotX, 2) +
                     Math.pow(a.y - robotY, 2));
                 var distB = Math.sqrt(Math.pow(b.x - robotX, 2) +
@@ -129,52 +117,45 @@ function Robot(room, startX, startY, startHeading, policy) {
 
                 var newHeadingA = Math.atan2(a.y - robotY, a.x - robotX);
                 var newHeadingB = Math.atan2(b.y - robotY, b.x - robotX);
-                var headingDiffA = Math.abs(newHeadingA - robotHeading)
-                var headingDiffB = Math.abs(newHeadingB - robotHeading)
+                var headingDiffA = angleDiff(newHeadingA, robotHeading)
+                var headingDiffB = angleDiff(newHeadingB, robotHeading)
                 var headingScore = headingDiffA - headingDiffB;
 
-                return distScore + 2 * headingScore;
+                return distScore + 1 * headingScore;
             });
 
-            // go through allPts in order, and for each one find out if it is
-            // far enough from all points on the path to be considered empty
+            this.allPts = nearPts.concat(this.allPts);
+
+            // remove points we have already surveyed
+            // go up to 50, or until we find an unsurveyed point , whichever 
+            // comes later
             var i = 0;
-            var nextPt;
-            var farEnough = false;
-            while (!farEnough && i < this.nearPts.length) {
-                nextPt = this.nearPts[i];
-                var j = this.path.length - 1;
-
-                farEnough = true;
-                do {
-                    var pathPt = this.path[j];
-                    var dist = Math.sqrt(Math.pow(nextPt.x - pathPt.x, 2) +
-                        Math.pow(nextPt.y - pathPt.y, 2));
-                    if (dist <= PATH_DISTANCE_THRESHOLD) {
-                        farEnough = false;
-                    }
-
-                    j--;
-                } while (j && farEnough)
-
-                // since the path never loses points, points that have been
-                // deemed too close can be removed from future consideration
-                if (!farEnough) {
-                    this.nearPts.splice(i, 1);
+            var foundUnsurveyedPt = false;
+            while ((!foundUnsurveyedPt || i < 50) && i < this.allPts.length) {
+                pt = this.allPts[i];
+                if (distance(this, pt) <= PATH_DISTANCE_THRESHOLD) {
+                    this.allPts.splice(i, 1)[0];
+                } else {
+                    foundUnsurveyedPt = true;
+                    i++;
                 }
             }
 
-            var directionToNextPt = Math.atan2(nextPt.y - this.y, nextPt.x - this.x);
+            var nextPt = this.allPts[0];
 
+            // draw allPts
+            this.allPts.slice(0, 50).forEach(function (pt) {
+                drawPt(pt, "grey", 1);
+            });
+
+            // calculate new heading and drive in that direction
+            var directionToNextPt = Math.atan2(nextPt.y - this.y, nextPt.x - this.x);
             this.heading = directionToNextPt;
             this.drive(FORWARD_SPEED);
 
-            console.log("x: " + this.x.toFixed(2) + " -> " + nextPt.x);
-            console.log("y: " + this.y.toFixed(2) + " -> " + nextPt.y);
-
             // stop once everything has been covered
-            if (this.allPts.length == 0 && this.nearPts.length == 0) {
-                this.policy = "";
+            if (this.allPts.length == 0) {
+                running = false;
             }
         }
     }
@@ -221,4 +202,16 @@ function Robot(room, startX, startY, startHeading, policy) {
     this.turn = function (speed) {
         this.heading += speed * TIMESTEP;
     }
+}
+
+function angleDiff(a ,b) {
+    var diff = Math.abs(a - b);
+    if (diff > Math.PI) {
+        diff = 2 * Math.PI - diff;
+    }
+    return Math.abs(diff);
+}
+
+function distance(a, b) {
+    return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 }
