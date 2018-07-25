@@ -32,7 +32,7 @@ function setRoom() {
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     drawRoom(room1);
-    drawRobot({x: width / 2, y: height / 2 - 1, heading: 3 * Math.PI / 2});
+    drawRobot(robot1);
 }
 
 function manualDimInput() {
