@@ -24,7 +24,7 @@ function setRoom() {
 
     scaledRadius = scale * robotRadius;
 
-    room1 = new Room(-width / 2 - 2, -height / 2, width, height);
+    room1 = new Room(-width / 2, -height / 2, width, height);
 
     var policy = document.getElementById("policy-select").value;
 
