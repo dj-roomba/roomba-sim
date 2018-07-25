@@ -1,8 +1,13 @@
-var TIMESTEP = 0.5;
+var TIMESTEP = 1;
 var scale;
 var scaledRadius;
 
+var interval;
+var running;
+
 function setRoom() {
+    clearInterval(interval);
+
     var width = parseInt(document.getElementById("width").value);
     var height = parseInt(document.getElementById("length").value);
 
@@ -23,7 +28,7 @@ function setRoom() {
 
     var policy = document.getElementById("policy-select").value;
 
-    robot1 = new Robot(room1, width / 2, height / 2, Math.PI / 2, policy);
+    robot1 = new Robot(room1, width / 2, height / 2, Math.PI / 6, policy);
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     drawRoom(room1);
@@ -40,22 +45,36 @@ function manualDimInput() {
     setRoom();
 }
 
+function run2() {
+    setRoom();
+
+    var hours = document.getElementById("time").value;
+    var time = parseFloat(hours) * 3600; // seconds
+
+    running = true;
+    for (var t = 0; t < time / TIMESTEP; t++) {
+        if (running) {
+            robot1.update();
+        } else {
+            break;
+        }
+    }
+
+    drawPath(robot1.path);
+}
+
 function run() {
     setRoom();
 
     var hours = document.getElementById("time").value;
     var time = parseFloat(hours) * 3600; // seconds
 
-    for (var t = 0; t < time / TIMESTEP; t++) {
-        robot1.update();
-    }
-
-    drawPath(robot1.path);
+    var running = true;
 
     // robot animation:
-    /*var c = 0;
-    setInterval(function() {
-        if (c * TIMESTEP < time) {
+    var t = 0;
+    interval = setInterval(function() {
+        if (t * TIMESTEP < time && running) {
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
             drawPath(robot1.path);
@@ -63,18 +82,28 @@ function run() {
             drawRoom(room1);
 
             robot1.update();
+
+            var hours = parseInt(t * TIMESTEP / 3600);
+            var min = parseInt((t * TIMESTEP / 60) % 60);
+            document.getElementById("elapsed").innerText = hours + "h " + min + "m";
+        } else {
+            clearInterval(interval);
         }
 
-        c++;
-    }, 1);*/
+        console.log(t);
+
+        t++;
+    }, 1);
 }
 
-function ud() {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+function ud(num) {
+    for (var i = 0; i < num; i++) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    drawPath(robot1.path);
-    drawRobot(robot1);
-    drawRoom(room1);
+        drawPath(robot1.path);
+        drawRobot(robot1);
+        drawRoom(room1);
 
-    robot1.update();
+        robot1.update();
+    }
 }
