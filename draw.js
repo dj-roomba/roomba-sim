@@ -41,6 +41,13 @@ function drawPath(pts) {
     ctx.stroke();
 }
 
+function drawPt(pt, color, size) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(pt.x * scale + xOffset, pt.y * scale + yOffset, size, 0, 2 * Math.PI);
+    ctx.fill();
+}
+
 function drawRoom(room) {
     ctx.strokeStyle = "black";
     ctx.lineWidth = 1;
