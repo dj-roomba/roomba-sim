@@ -86,7 +86,7 @@ function Robot(room, startX, startY, startHeading, policy) {
             this.drive(FORWARD_SPEED);
 
             if (this.hitWall()) {
-                this.policy = "pursue-empty";
+                this.policy = "";
             }
 
         } else if (this.policy == "pursue-empty") {
